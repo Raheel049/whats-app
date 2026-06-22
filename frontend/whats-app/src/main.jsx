@@ -1,24 +1,22 @@
-import { Clerk } from "@clerk/clerk-js";
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
+import { ClerkProvider } from '@clerk/clerk-react'
 
-const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+// .env file se Publishable Key nikalna
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
-if (!publishableKey) {
-  throw new Error("Add your VITE_CLERK_PUBLISHABLE_KEY to the .env file");
+// Agar key nahi milti toh console mein error show hoga taake debugging asaan ho
+if (!PUBLISHABLE_KEY) {
+  throw new Error("Missing Publishable Key! Make sure you added VITE_CLERK_PUBLISHABLE_KEY to your .env file")
 }
 
-const clerkDomain = atob(publishableKey.split("_")[2]).slice(0, -1);
-
-await new Promise((resolve, reject) => {
-  const script = document.createElement("script");
-  script.src = `https://${clerkDomain}/npm/@clerk/ui@1/dist/ui.browser.js`;
-  script.async = true;
-  script.crossOrigin = "anonymous";
-  script.onload = resolve;
-  script.onerror = () => reject(new Error("Failed to load @clerk/ui bundle"));
-  document.head.appendChild(script);
-});
-
-const clerk = new Clerk(publishableKey);
-await clerk.load({
-  ui: { ClerkUI: window.__internal_ClerkUICtor },
-});
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    {/* Poori App ko ClerkProvider ke andar wrap kar diya */}
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+      <App />
+    </ClerkProvider>
+  </React.StrictMode>,
+)
