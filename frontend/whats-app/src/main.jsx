@@ -5,7 +5,8 @@ import './index.css'
 import { ClerkProvider } from '@clerk/clerk-react'
 
 // .env file se Publishable Key nikalna
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+console.log("PUBLISHABLE_KEY",PUBLISHABLE_KEY);
 
 // Agar key nahi milti toh console mein error show hoga taake debugging asaan ho
 if (!PUBLISHABLE_KEY) {

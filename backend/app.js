@@ -14,6 +14,6 @@ app.use(express.urlencoded({extended : true}))
 dbConnect();
 
 
-app.use('/api/auth', authRouter)
+app.use('/api/users', authRouter)
 
 app.listen(3000, () => console.log("server running on port 3000"));
