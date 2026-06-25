@@ -1,6 +1,7 @@
-import userModel from '../models/User'; // Note: ES6 mein '.js' extension lagana lazmi hota hai local files ke sath
+import userModel from '../models/User.js'; // Note: ES6 mein '.js' extension lagana lazmi hota hai local files ke sath
 
 export const signUp = async (req, res) => {
+   
     const { clerkUserId, name, email, avatar } = req.body;
   
     try {
