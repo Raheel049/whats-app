@@ -28,11 +28,20 @@ dbConnect();
 
 app.use('/api/users', authRouter)
 
+app.post("/api/chats/access", async (req, res) => {
+    try {
+        res.status(200).json({id: "dummy chat id ", participants: [req.body.receiverId]})
+    } catch (error) {
+        res.status(500).json({error: error.message})
+    }
+})
+
 io.on("connection", (socket) => {
     console.log(`User connected ${socket.id}`);
 
     socket.on("join_chat", (chatId) => {
         socket.join(chatId)
+        console.log(`Room joined ${chatId}`)
     })
 })
 

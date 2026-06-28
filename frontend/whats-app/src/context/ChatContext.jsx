@@ -1,14 +1,16 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 const ChatContext = createContext()
 
-export const ChatProvider = ({chidren}) => {
+export const ChatProvider = ({children}) => {
     const [activeChat, setActiveChat] = useState(null);
     const [selectUser, setSelectUser] = useState(null);
 
     return (
         <ChatContext.Provider value={{activeChat, selectUser, setActiveChat, setSelectUser}}>
-            {chidren}
+            {children}
         </ChatContext.Provider>
     )
 }
+
+export const useChatState = () => useContext(ChatContext);
