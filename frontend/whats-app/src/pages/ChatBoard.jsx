@@ -13,6 +13,7 @@ const ChatBoard = () => {
   const { activeChat, setActiveChat, selectUser: selectedUser, setSelectUser: setSelectedUser } = useChatState();
   const [messageText, setMessageText] = useState("");
 
+
   // Socket Connection Effect
   useEffect(() => {
     socket = io("http://localhost:3000");
@@ -46,8 +47,9 @@ const ChatBoard = () => {
   const handleUserClick = async (clickedUser) => {
     try {
       // 🌟 Tip: Axios Base URL ke mutabiq endpoint checks lazmi hain
-      const res = await axiosInstance.post('/chats/access', { receiverId: clickedUser.clerkId });
+      const res = await axiosInstance.post('/chats/access', { receiverId: clickedUser.clerkUserId });
       console.log(res.data)
+      console.log(clickedUser)
       setActiveChat(res.data); 
       setSelectedUser(clickedUser); 
     } catch (error) {
@@ -66,6 +68,15 @@ const ChatBoard = () => {
     )
   }
 
+  const handleSendMessage = async () => {
+    console.log(messageText);
+
+    const res = await axiosInstance.post("/chats/send", {content: messageText, chatId: activeChat._id})
+    console.log(res)
+  }
+  console.log(selectedUser)
+ console.log(activeChat)
+
   return (
     <div className="w-full h-[90vh] bg-[#d8e6ef] flex flex-col overflow-hidden font-sans">
       <div className="flex flex-1 w-full max-w-7xl mx-auto px-4 py-4 gap-6 overflow-hidden">
@@ -83,7 +94,7 @@ const ChatBoard = () => {
                   key={user._id}
                   onClick={() => handleUserClick(user)}
                   className={`flex items-center gap-3 p-4 transition cursor-pointer hover:bg-gray-50 ${
-                    selectedUser?.clerkId === user.clerkId ? 'bg-gray-100' : ''
+                    selectedUser?.clerkUserId === user.clerkUserId ? 'bg-gray-100' : ''
                   }`}
                 >
                   <div className="w-11 h-11 rounded-full bg-gray-300 flex items-center justify-center text-lg font-bold shrink-0 overflow-hidden">
@@ -107,11 +118,19 @@ const ChatBoard = () => {
             <>
               {/* Header */}
               <div className="px-6 py-3 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center shrink-0">
-                <div>
+                <div className='flex'>
+                  <div>
+                    {selectedUser.avatar ? <img src={selectedUser.avatar} alt="profile" className=" h-[50px] w-[50px] rounded-full  object-cover" /> : "👤"}
+                    
+                  </div>
+                  <div className='pl-2'>
                   <h3 className="text-sm font-bold text-gray-800 tracking-wide uppercase">
-                    {selectedUser?.firstName} {selectedUser?.lastName}
+                    {selectedUser?.name}
                   </h3>
-                  <p className="text-xs text-emerald-600 font-medium mt-0.5">Online</p>
+                  <p className="text-xs text-emerald-600 font-medium mt-0.5">online</p>
+                  </div>
+
+                  
                 </div>
                 <IoEllipsisVertical className="text-gray-400 text-lg cursor-pointer" />
               </div>
@@ -130,7 +149,7 @@ const ChatBoard = () => {
                   placeholder="Type a message..." 
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none"
                 />
-                <button className="bg-[#005e54] text-white p-2.5 rounded-full shadow-md">
+                <button className="bg-[#005e54] text-white p-2.5 rounded-full shadow-md" onClick={handleSendMessage}>
                   <IoSend />
                 </button>
               </div>

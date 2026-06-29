@@ -6,6 +6,7 @@ import authRouter from "./routes/auth.route.js";
 import cors from 'cors'
 import { createServer } from 'http'
 import { Server } from "socket.io";
+import messageRoute from "./routes/message.route.js";
 
 
 
@@ -27,14 +28,8 @@ dbConnect();
 
 
 app.use('/api/users', authRouter)
+app.use('/api/chats', messageRoute)
 
-app.post("/api/chats/access", async (req, res) => {
-    try {
-        res.status(200).json({id: "dummy chat id ", participants: [req.body.receiverId]})
-    } catch (error) {
-        res.status(500).json({error: error.message})
-    }
-})
 
 io.on("connection", (socket) => {
     console.log(`User connected ${socket.id}`);
