@@ -29,37 +29,42 @@ export const fetchMessages = async (req, res) => {
     const currentUserId = req.auth.userId
 
     if(!receiverId || !currentUserId){
-        res.status(400).json({message: "Users Id not found"});
+        return res.status(400).json({message: "Users Id not found"});
     }
 
     try {
+
+        const currentUser = await userModel.findOne({clerkUserId: currentUserId});
+        const receiverUser = await userModel.findOne({clerkUserId: receiverId});
+
+        if (!currentUser || !receiverUser) {
+            return res.status(404).json({ message: "User not found in database" });
+        }
+
         let isChatExist = await Chat.findOne({
             isGroupChat: false,
-            $and: [
-                {participants: {$elemMatch: {$eq: currentUserId}}},
-                {participants: {$elemMatch: {$eq: receiverId}}}
-            ]
+            participants: { $all: [currentUser._id, receiverUser._id]}
         })
         .populate("participants", "-password")
         .populate("latestMessage");
-
+        console.log("chatIs",isChatExist);
         if(isChatExist){
-            res.status(200).json(isChatExist)
+            return res.status(200).json(isChatExist)
         }
 
         const newChatData = {
             isGroupChat: false,
-            participants: [currentUserId, receiverId]
+            participants: [currentUser._id, receiverUser._id]
         }
 
         const createdChat = await Chat.create(newChatData)
 
         const fullChat = await Chat.findOne({ _id: createdChat._id }).populate("participants", "-password");
         
-        res.status(200).json(fullChat);
+        return res.status(200).json(fullChat);
 
     } catch (error) {
-        
+        return res.status(500).json({message: error.message})
     }
 
 }
@@ -76,18 +81,18 @@ export const sendMessage = async (req, res) => {
     try {
         const currentUser = await userModel.findOne({clerkUserId : currentUserId})
         if(!currentUser){
-            res.status(404).json({messgae: "User not found"})
+            return res.status(404).json({messgae: "User not found"})
         }
-        console.log(currentUser);
+        console.log(currentUser._id);
 
 
         let message = await Message.create({
-            sender: currentUser._id,
-            content: content,
+            senderId: currentUser._id,
+            text: content,
             chatId: chatId
         }) 
 
-        message = await message.populate("sender", "name avatar")
+        message = await message.populate("senderId", "name avatar")
         message = await message.populate("chatId")
 
         await Chat.findByIdAndUpdate(chatId, {

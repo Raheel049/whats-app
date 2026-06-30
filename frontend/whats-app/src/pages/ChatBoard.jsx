@@ -4,7 +4,7 @@ import { BsEmojiSmile } from 'react-icons/bs'
 import { io } from 'socket.io-client'
 // 🌟 FIX: Folder ka naam check karke sahi import karein ('utils' ya 'utlis')
 import axiosInstance from '../utlis/axiosInstance' 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useChatState } from '../context/ChatContext' 
 
 let socket;
@@ -43,6 +43,28 @@ const ChatBoard = () => {
     }
   });
 
+  const queryClient = useQueryClient();
+
+  const {mutate: sendMessageMutate, isPending: isSending} = useMutation({
+    mutationFn: async (newComment) => {
+      const res = await axiosInstance.post("/chats/send", {
+        chatId: activeChat._id,
+        content: newComment
+      });
+      return res.data;
+    },
+
+    onSuccess: (data) => {
+      console.log("Message send success",data)
+      setMessageText("")
+      // queryClient.invalidateQueries({ queryKey: ['availableUsers'] });
+    },
+
+    onError: (error) => {
+      console.log("Message send error:", error)
+    }
+  })
+
   // Sidebar user click handler
   const handleUserClick = async (clickedUser) => {
     try {
@@ -68,11 +90,12 @@ const ChatBoard = () => {
     )
   }
 
-  const handleSendMessage = async () => {
-    console.log(messageText);
+  
 
-    const res = await axiosInstance.post("/chats/send", {content: messageText, chatId: activeChat._id})
-    console.log(res)
+
+
+  const handleSendMessage = async () => {
+    sendMessageMutate(messageText)
   }
   console.log(selectedUser)
  console.log(activeChat)
