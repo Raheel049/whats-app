@@ -7,6 +7,7 @@ import axiosInstance from '../utlis/axiosInstance'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useChatState } from '../context/ChatContext' 
 
+
 let socket;
 
 const ChatBoard = () => {
@@ -43,6 +44,16 @@ const ChatBoard = () => {
     }
   });
 
+  const {data : messages, isLoading: isMessagesLoading } = useQuery({
+    queryKey: ['chatMessages', activeChat?._id],
+    queryFn: async () => {
+      if(!activeChat._id) return [];
+      const res = await axiosInstance.get(`/messages/all/${activeChat._id}`);
+      return res.data;
+    }
+    
+  }) 
+
   const queryClient = useQueryClient();
 
   const {mutate: sendMessageMutate, isPending: isSending} = useMutation({
@@ -70,6 +81,7 @@ const ChatBoard = () => {
     try {
       // 🌟 Tip: Axios Base URL ke mutabiq endpoint checks lazmi hain
       const res = await axiosInstance.post('/chats/access', { receiverId: clickedUser.clerkUserId });
+      
       console.log(res.data)
       console.log(clickedUser)
       setActiveChat(res.data); 
@@ -160,7 +172,37 @@ const ChatBoard = () => {
 
               {/* Messages Center */}
               <div className="flex-1 p-6 overflow-y-auto bg-gray-50/30 flex flex-col gap-4">
-                <p className="text-xs text-center text-gray-400">Secure end-to-end connection established</p>
+                {isMessagesLoading ? (
+                  <p className="text-xs text-center text-gray-400">Loading messages...</p>
+                ) : messages && messages.length > 0 ? (
+                  messages.map((msg) => {
+                    // Check karo message kis ne bheja ha? (Aapne ya samne wale ne?)
+                    // Agar message ki senderId humare selectedUser se match nahi krti, iska mtlb humne bheja ha
+                    const isMyMessage = msg.senderId === selectedUser?.clerkUserId || msg.senderId?._id === selectedUser?._id ? false : true;
+
+                    return (
+                      <div
+                        key={msg._id}
+                        className={`flex w-full ${isMyMessage ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-md px-4 py-2 rounded-xl text-sm shadow-sm ${
+                            isMyMessage
+                              ? 'bg-[#005e54] text-white rounded-tr-none'
+                              : 'bg-white text-gray-800 border border-gray-200 rounded-tl-none'
+                          }`}
+                        >
+                          <p>{msg.content}</p>
+                          <span className={`text-[9px] block text-right mt-1 ${isMyMessage ? 'text-gray-200' : 'text-gray-400'}`}>
+                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-center text-gray-400">No messages yet. Say Hi! 👋</p>
+                )}
               </div>
 
               {/* Input Box */}

@@ -108,3 +108,25 @@ export const sendMessage = async (req, res) => {
 
 
 }
+
+
+export const getAllMessage = async (req, res) => {
+    const {chatId} = req.params
+    console.log(chatId);
+    if(!chatId){
+        return res.status(400).json({message: "Required fields are misssing"})
+    }
+
+    try {
+        const isChat = await Chat.findById(chatId)
+        if(!isChat){
+            return res.status(404).json({message: "Messages are not found in db"})
+        }
+
+        const messages = await Message.find({chatId: chatId}).populate("senderId", "name avatar email").sort({createdAt: 1})
+        return res.status(200).json(messages);
+
+    } catch (error) {
+        res.status(500).json({message: error.message || "Internal server error"});
+    }
+}
