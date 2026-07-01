@@ -2,29 +2,29 @@ import Chat from '../models/chat.js'
 import Message  from '../models/Message.js';
 import userModel from '../models/User.js';
 
-export const sendMessageLogic = async (chatId, senderId, text, messageType = "text", mediaUrl = "") => {
-    try {
-        const newMessage = {
-            chatId,
-            senderId,
-            text,
-            messageType,
-            mediaUrl
-        }
+// export const sendMessageLogic = async (chatId, senderId, text, messageType = "text", mediaUrl = "") => {
+//     try {
+//         const newMessage = {
+//             chatId,
+//             senderId,
+//             text,
+//             messageType,
+//             mediaUrl
+//         }
     
-        await Chat.findByIdAndUpdate(chatId, {
-            lastMessage: newMessage._id
-        });
+//         await Chat.findByIdAndUpdate(chatId, {
+//             lastMessage: newMessage._id
+//         });
     
-        return newMessage;
-    } catch (error) {
-        console.error("Message not saved", error)
-        return null
-    }
-}
+//         return newMessage;
+//     } catch (error) {
+//         console.error("Message not saved", error)
+//         return null
+//     }
+// }
 
 
-export const fetchMessages = async (req, res) => {
+export const accsaaChat = async (req, res) => {
     const {receiverId} = req.body
     const currentUserId = req.auth.userId
 
@@ -40,13 +40,13 @@ export const fetchMessages = async (req, res) => {
         if (!currentUser || !receiverUser) {
             return res.status(404).json({ message: "User not found in database" });
         }
+        const currentUserStr = currentUser._id.toString();
+        const receiverUserStr = receiverUser._id.toString();
 
         let isChatExist = await Chat.findOne({
-            isGroupChat: false,
-            participants: { $all: [currentUser._id, receiverUser._id]}
-        })
-        .populate("participants", "-password")
-        .populate("latestMessage");
+    
+            participants: { $all: [currentUserStr, receiverUserStr] }
+        }).populate("lastMessage");
         console.log("chatIs",isChatExist);
         if(isChatExist){
             return res.status(200).json(isChatExist)
@@ -54,14 +54,12 @@ export const fetchMessages = async (req, res) => {
 
         const newChatData = {
             isGroupChat: false,
-            participants: [currentUser._id, receiverUser._id]
+            participants: [currentUserStr, receiverUserStr]
         }
 
         const createdChat = await Chat.create(newChatData)
-
-        const fullChat = await Chat.findOne({ _id: createdChat._id }).populate("participants", "-password");
         
-        return res.status(200).json(fullChat);
+        return res.status(200).json(createdChat);
 
     } catch (error) {
         return res.status(500).json({message: error.message})
@@ -112,7 +110,7 @@ export const sendMessage = async (req, res) => {
 
 export const getAllMessage = async (req, res) => {
     const {chatId} = req.params
-    console.log(chatId);
+    console.log("chatidformssage",chatId);
     if(!chatId){
         return res.status(400).json({message: "Required fields are misssing"})
     }
@@ -127,6 +125,6 @@ export const getAllMessage = async (req, res) => {
         return res.status(200).json(messages);
 
     } catch (error) {
-        res.status(500).json({message: error.message || "Internal server error"});
+        return res.status(500).json({message: error.message || "Internal server error"});
     }
 }

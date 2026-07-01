@@ -13,7 +13,8 @@ let socket;
 const ChatBoard = () => {
   const { activeChat, setActiveChat, selectUser: selectedUser, setSelectUser: setSelectedUser } = useChatState();
   const [messageText, setMessageText] = useState("");
-
+  
+  
 
   // Socket Connection Effect
   useEffect(() => {
@@ -39,7 +40,7 @@ const ChatBoard = () => {
     queryFn: async () => {
       // 🌟 Tip: Agar axiosInstance me pehle se '/api' base URL laga ha to sirf '/users/all' likhein
       const res = await axiosInstance.get('/users/all');
-      console.log(res)
+      // console.log(res)
       return res.data;
     }
   });
@@ -47,12 +48,15 @@ const ChatBoard = () => {
   const {data : messages, isLoading: isMessagesLoading } = useQuery({
     queryKey: ['chatMessages', activeChat?._id],
     queryFn: async () => {
-      if(!activeChat._id) return [];
-      const res = await axiosInstance.get(`/messages/all/${activeChat._id}`);
+      if (!activeChat?._id) return [];
+      const res = await axiosInstance.get(`/chats/message/all/${activeChat._id}`);
+      // console.log(res.data)
       return res.data;
-    }
-    
+    },
+    enabled: !!activeChat?._id,
   }) 
+
+  console.log(activeChat)
 
   const queryClient = useQueryClient();
 
@@ -62,13 +66,16 @@ const ChatBoard = () => {
         chatId: activeChat._id,
         content: newComment
       });
+      
+
       return res.data;
     },
 
     onSuccess: (data) => {
-      console.log("Message send success",data)
+      // console.log("Message send success",data)
       setMessageText("")
-      // queryClient.invalidateQueries({ queryKey: ['availableUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['availableUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['chatMessages', activeChat?._id] });
     },
 
     onError: (error) => {
@@ -82,8 +89,8 @@ const ChatBoard = () => {
       // 🌟 Tip: Axios Base URL ke mutabiq endpoint checks lazmi hain
       const res = await axiosInstance.post('/chats/access', { receiverId: clickedUser.clerkUserId });
       
-      console.log(res.data)
-      console.log(clickedUser)
+      // console.log(res.data)
+      // console.log(clickedUser)
       setActiveChat(res.data); 
       setSelectedUser(clickedUser); 
     } catch (error) {
@@ -109,8 +116,8 @@ const ChatBoard = () => {
   const handleSendMessage = async () => {
     sendMessageMutate(messageText)
   }
-  console.log(selectedUser)
- console.log(activeChat)
+  // console.log(selectedUser)
+//  console.log(activeChat)
 
   return (
     <div className="w-full h-[90vh] bg-[#d8e6ef] flex flex-col overflow-hidden font-sans">
@@ -137,7 +144,7 @@ const ChatBoard = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-bold text-gray-800 truncate">{user.name}</h4>
-                    <p className="text-xs text-gray-500 truncate mt-0.5">Click to chat</p>
+                    <p className="text-xs text-gray-500 truncate mt-0.5">{activeChat?.lastMessage?.text}</p>
                   </div>
                 </div>
               ))
@@ -178,8 +185,11 @@ const ChatBoard = () => {
                   messages.map((msg) => {
                     // Check karo message kis ne bheja ha? (Aapne ya samne wale ne?)
                     // Agar message ki senderId humare selectedUser se match nahi krti, iska mtlb humne bheja ha
-                    const isMyMessage = msg.senderId === selectedUser?.clerkUserId || msg.senderId?._id === selectedUser?._id ? false : true;
+                    // const isMyMessage = msg.senderId?.clerkUserId === selectedUser?.clerkUserId ? false : true;
+                    const senderMongoId = msg.senderId?._id ? msg.senderId._id.toString() : msg.senderId?.toString();
+                    const selectedUserMongoId = selectedUser?._id?.toString();
 
+                    const isMyMessage = senderMongoId === selectedUserMongoId ? false : true;
                     return (
                       <div
                         key={msg._id}
@@ -192,7 +202,7 @@ const ChatBoard = () => {
                               : 'bg-white text-gray-800 border border-gray-200 rounded-tl-none'
                           }`}
                         >
-                          <p>{msg.content}</p>
+                          <p>{msg.text}</p>
                           <span className={`text-[9px] block text-right mt-1 ${isMyMessage ? 'text-gray-200' : 'text-gray-400'}`}>
                             {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>

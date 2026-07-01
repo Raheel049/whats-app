@@ -26,7 +26,7 @@ export const getAllUsers = async (req, res) => {
     const loggedInUserId = req.auth.userId; // Clerk ki ID jo login ha
 
     // Apne ilawa baqi saare users database se nikalen
-    const users = await userModel.find({ clerkId: { $ne: loggedInUserId } });
+    const users = await userModel.find({ clerkUserId: { $ne: loggedInUserId } });
     
     res.status(200).json(users);
   } catch (error) {
